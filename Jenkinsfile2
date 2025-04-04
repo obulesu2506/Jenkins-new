@@ -1,0 +1,40 @@
+//This Pipeline usage is to mention the time period that job should run within specified time limit, otherwise will get failure/warning alert to the user
+
+pipeline {
+    agent {
+        label 'AGENT-1'
+    }
+    options {
+        timeout(time: 10, unit:'SECONDS')
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'echo This is Build'
+                sh 'sleep 10'  //can comment once this timeout use-case is done
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'echo This is Test'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'echo This is Deploy'
+                error 'Pipeline failed'
+            }
+        }
+    }
+    post {
+        always{
+            echo " This section runs always"
+        }
+        success{
+            echo "This section runs when the pipeline success"
+        }
+        failure{
+            echo "This section runs when the pipeline failure"
+        }
+    }
+}
