@@ -17,18 +17,22 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh 'echo This is Deploy'
+                error 'This will get failed'
             }
         }
     }
     post {
         always {
             echo "This section run always"
+            deleteDir()
         }
         success {
             echo "This section run when the pipeline success"
+            deleteDir()
         }
         failure {
             echo "This section run when the pipeline failure"
+            deleteDir()
         }
     }
 }
