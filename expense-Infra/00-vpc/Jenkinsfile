@@ -1,0 +1,64 @@
+pipeline {
+    agent {
+        label 'AGENT-1'
+    }
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+    parameters {
+        Choice(Name: 'ACTION', choices: ['apply', 'destroy'], description: 'Section Action type')
+    }
+    stages {
+        stage('Init  and Play'){
+            steps { //credentails is the file created in Jenkins under credentails section
+                withAWS(region: 'us-east-1', credentials: 'aws-creds') {
+                    sh """
+                        cd 00-vpc
+                        terraform init -reconfigure
+                        terraform plan -out=tfplan
+                    """
+                }
+            }
+        }
+        stage('Apply or Destroy'){
+            input {
+                message "Should we continue ${params.ACTION} ?"
+                ok "yes, we should."
+            }
+            steps {
+                withAWS(region: 'us-east-1', credentials: 'aws-creds') { 
+                    sh """
+                        cd 00-vpc
+                        if [ ${params.ACTION} == 'apply' ]
+                        then
+                            terraform apply -auto-approve tfplan
+                        elif [ ${params.ACTION} == 'destroy' ]
+                        then
+                            terraform destroy -auto-approve 
+                        fi
+                    """
+                }
+            }
+        }
+        stage('Trigger SG'){
+            steps {
+                build job: '10-sg', parameters: [string(name: 'ACTION', value: 'apply' )], wait: false 
+            }
+        }
+    }
+    post {
+        always {
+            echo " This section runs always"
+            deleteDir()
+        }
+        success {
+            echo "This section runs when the pipeline success"
+            deleteDir()
+        }
+        failure {
+            echo "This section runs when the pipeline failure"
+            deleteDir()
+        }
+    }
+}
