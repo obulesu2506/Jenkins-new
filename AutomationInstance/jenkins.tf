@@ -1,24 +1,26 @@
 resource "aws_instance" "jenkins" {
-    count = length(var.instances)
+
     ami = "ami-09c813fb71547fc4f" # This is our devops-practice AMI ID
-    vpc_security_group_ids = [aws_security_group.allow_all_jenkins.id]
+    vpc_security_group_ids = [aws_security_group.allow_tls.id]
     instance_type = "t3.micro"
 
-    #extending root volume since 20 GB is not sufficient
     root_block_device {
-      volume_size = 50 #set root volume to 50 GB
-      volume_type = "gp3" #use gp3 for better performance (OPTIONAL)
+      volume_size = 50
+      volume_type = "gp3"
     }
-    user_data = file("jenkins.sh") #Execute during launching instance stage
+
+    user_data = file("jenkins.sh")
 
     tags = {
-      Name = var.instances[count.index]
+      Name = "Jenkins" 
     }
   
 }
-resource "aws_security_group" "allow_all_jenkins" {
-    name = "allow_all_jenkins"
-    description = "This security group allows all Input/Output SSH traffic"
+
+resource "aws_security_group" "allow_tls" {
+
+    name = "allow_all"
+    description = "This security group allows all inbound and outbound traffic request"
 
     ingress {
         from_port = 0
@@ -33,9 +35,8 @@ resource "aws_security_group" "allow_all_jenkins" {
         protocol = "-1"
         cidr_blocks = ["0.0.0.0/0"]
     }
-
     tags = {
-      Name = "allow_tls_1"
+        Name = "allow_tls_1"
     }
   
 }
