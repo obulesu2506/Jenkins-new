@@ -16,7 +16,7 @@ pipeline {
             steps {
                 withAWS(region: 'us-east-1', credentials: 'aws-creds') { // aws-creds credentail file should be create in jenkins
                     sh """
-                        cd 00-vpc
+                        cd expense-Infra/00-vpc
                         terraform init -reconfigure
                         terraform plan -out=tfplan
                     """
@@ -31,7 +31,7 @@ pipeline {
             steps {
                 withAWS(region:'us-east-1', credentials: 'aws-creds') {
                     sh """
-                    cd 00-vpc
+                    cd expense-Infra/00-vpc
                     if [ ${params.ACTION} == 'apply' ]
                     then
                         terraform apply -auto-approve tfplan
