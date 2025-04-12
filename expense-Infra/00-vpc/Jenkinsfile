@@ -14,7 +14,7 @@ pipeline {
     stages{
         stage('init and plan') {
             steps {
-                withAWS(region: 'us-east-1', credentials: 'aws-creds') { // aws-creds credentail file should be create in jenkins
+                withAWS(region: 'us-east-1', credentials: 'aws-creds') { // aws-creds credential file should be create in jenkins
                     sh """
                         cd expense-Infra/00-vpc
                         terraform init -reconfigure
