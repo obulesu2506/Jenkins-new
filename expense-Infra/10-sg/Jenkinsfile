@@ -4,6 +4,8 @@ pipeline {
     }
     options{
         timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        ansiColor('xterm')
     }
     environment{
         DEBUG = 'true'
@@ -86,7 +88,7 @@ pipeline {
             stages{
                 stage('ACM'){
                     steps {
-                        build job: '50-acm', parameters: [string(name: 'ACTION', value: 'apply' )], wait: false
+                        build job: '50-acm', parameters: [string(name: 'ACTION', value: 'apply' )]
                     }
                 }
                 stage('ALB'){

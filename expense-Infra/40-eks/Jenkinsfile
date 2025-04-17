@@ -1,0 +1,60 @@
+pipeline {
+    agent {
+        label 'AGENT-1'
+    }
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        ansiColor('xterm')
+    }
+    parameters{
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Select Action')
+    }
+    stages {
+        stage('Init and Plan'){
+            steps{
+                withAWS(region: 'us-east-1', credentials: 'aws-creds'){
+                    sh """
+                        cd expense-Infra/40-eks
+                        terraform init -reconfigure
+                        terraform plan -out-tfplan
+                    """
+                }
+            }
+        }
+        stage('apply or destroy'){
+            input{
+                message "Should we continue to ${params.ACTION}"
+                ok "yes, we should."
+            }
+            steps{
+                withAWS(region: 'us-east-1', credentials: 'aws-creds'){
+                    sh """
+                        cd expense-Infra/40-eks
+                        if [ ${params.ACTION} == 'apply' ]
+                        then
+                            terraform apply -auto-approve -out=tfplan
+                        elif [ ${params.ACTION} == 'destroy' ]
+                        then
+                            terraform destroy -auto-approve
+                        fi
+                    """
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo "This section runs always"
+            deleteDir()
+        }
+        success {
+            echo "This section runs when the pipeline success"
+            deleteDir()
+        }
+        failure {
+            echo "This section runs when the pipeline failure"
+            deleteDir()
+        }
+    }
+}
