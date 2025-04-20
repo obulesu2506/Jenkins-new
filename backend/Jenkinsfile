@@ -1,52 +1,12 @@
-//Use-Case: Sample pipeline for backend artifact creation and deployment
-pipeline {
-    agent {
-        label 'AGENT-1'
-    }
-    options {
-        timeout(time: 20, unit: 'MINUTES')
-        disableConcurrentBuilds()
-    }
-    environment {
-        DEBUG = 'true'
-        appVersion = ''  // Those declared in environment section will be treat as global variable
-    }
-    stages {
-        stage('Read the version'){
-            steps {
-                script {
-                    def packageJson = readJsonfile: 'package.json'
-                    appVersion = packageJson.version
-                    echo "APP Version: ${appVersion}"
-                }
-            }
-        }
-        stage('Install Dependencies'){
-            steps {
-                sh 'npm install'  //Need to install npm library in master server before this script applies and npm install should be in agent node
-            }
-        }
-        stage('Docker Build'){
-            steps {
-                sh """
-                docker build -t joindevops/backend:${appVersion} .
-                docker images
-                """
-            }
-        }
-    }
-    post {
-        always {
-            echo "This section runs always"
-            deleteDir()
-        }
-        success {
-            echo "This section runs when the pipeline success"
-            deleteDir()
-        }
-        failure {
-            echo "This section runs when the pipeline failure"
-            deleteDir()
-        }
-    }
+@Library('jenkins-shared-library') _ // Global pipeline libraries in the system configuration
+def configmap = [
+    project: "expense",
+    component: "backend"
+]
+
+if ( !env.BRANCH_NAME.equalsIgnoreCase('main')) {  //true if the branch is feature branch
+    nodeJSEKSPipeline(configmap)
+}
+else {
+    echo "Follow the process of PROD Release"
 }
